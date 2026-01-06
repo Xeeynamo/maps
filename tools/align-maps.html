@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map Alignment Tool - Manual</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #1e1818;
+      color: #eee;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { margin-top: 0; }
+    .controls {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    label { font-size: 12px; color: #888; }
+    select, button, input {
+      padding: 8px 12px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #2a2424;
+      color: #eee;
+      font-size: 14px;
+    }
+    button {
+      cursor: pointer;
+      background: #6e4a4a;
+    }
+    button:hover { background: #7e5a5a; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .canvas-container {
+      position: relative;
+      border: 1px solid #444;
+      background: #0a0a0f;
+      overflow: hidden;
+      cursor: grab;
+    }
+    .canvas-container:active { cursor: grabbing; }
+    canvas {
+      display: block;
+    }
+    .status {
+      padding: 10px;
+      background: #2a2424;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-family: monospace;
+    }
+    .score-display {
+      padding: 10px 15px;
+      background: #2a2424;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-family: monospace;
+      font-size: 16px;
+    }
+    .score-display .score-value {
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .score-good { color: #4f8; }
+    .score-medium { color: #fa0; }
+    .score-bad { color: #f44; }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type="range"] {
+      width: 150px;
+    }
+    .value-display {
+      min-width: 60px;
+      text-align: right;
+      font-family: monospace;
+    }
+    .instructions {
+      background: #2a2424;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .instructions strong { color: #f8a090; }
+    .key {
+      background: #4a3a3a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    .btn-undo { background: #8a5a3a; }
+    .btn-undo:hover { background: #9a6a4a; }
+    .btn-auto { background: #5a7a5a; }
+    .btn-auto:hover { background: #6a8a6a; }
+    .btn-micro { background: #5a6a7a; }
+    .btn-micro:hover { background: #6a7a8a; }
+    .btn-save { background: #7a4a5a; }
+    .btn-save:hover { background: #8a5a6a; }
+    .micro-controls button { font-size: 12px; padding: 4px 8px; }
+  </style>
+</head>
+<body>
+  <h1>Map Alignment Tool - Manual</h1>
+
+  <div class="instructions">
+    <strong>Instructions:</strong><br>
+    1. Select base map and sub-map, then click "Load Maps"<br>
+    2. <span class="key">Drag</span> to pan the view, <span class="key">Scroll</span> to zoom<br>
+    3. Use <strong>Offset X/Y</strong> sliders to roughly position the overlay<br>
+    4. Use <strong>Scale</strong> slider to resize (scales from center, won't shift the image)<br>
+    5. Use <strong>Opacity</strong> to see through the overlay and match features<br>
+    6. Click <strong>Auto Fine-tune</strong> to automatically optimize alignment around current position<br>
+    7. Use <strong>Undo</strong> to revert changes. Copy the config values when aligned.
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Base Map</label>
+      <select id="baseMap">
+        <option value="1000-EASTC">1000-EASTC</option>
+        <option value="1200-GRASA">1200-GRASA</option>
+        <option value="1300-JUNOA">1300-JUNOA</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Sub Map to Align</label>
+      <select id="subMap">
+        <option value="1110-KALMT">1110-KALMT</option>
+        <option value="1200-GRASA">1200-GRASA</option>
+        <option value="1300-JUNOA">1300-JUNOA</option>
+        <option value="1320-JUNOS">1350-JNONT</option>
+        <option value="1350-JNONT">1350-JNONT</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button id="loadBtn" onclick="loadMaps()">Load Maps</button>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button id="undoBtn" class="btn-undo" onclick="undo()" disabled>Undo</button>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button id="saveBtn" class="btn-save" onclick="saveConfig()">Save</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Offset X</label>
+      <div class="slider-row">
+        <input type="range" id="offsetX" min="-8192" max="8192" value="0" step="1" oninput="updateFromSliders()">
+        <span class="value-display" id="offsetXVal">0</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Offset Y</label>
+      <div class="slider-row">
+        <input type="range" id="offsetY" min="-8192" max="8192" value="0" step="1" oninput="updateFromSliders()">
+        <span class="value-display" id="offsetYVal">0</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Scale (from center)</label>
+      <div class="slider-row">
+        <input type="range" id="scale" min="0.01" max="2" value="0.5" step="0.001" oninput="updateScaleFromSlider()">
+        <span class="value-display" id="scaleVal">0.500</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Opacity</label>
+      <div class="slider-row">
+        <input type="range" id="opacity" min="0" max="1" value="0.7" step="0.05" oninput="updateOpacityFromSlider()">
+        <span class="value-display" id="opacityVal">0.70</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Fine-tune Offset X</label>
+      <div class="slider-row">
+        <button onclick="adjustOffset('x', -10)">-10</button>
+        <button onclick="adjustOffset('x', -1)">-1</button>
+        <button onclick="adjustOffset('x', 1)">+1</button>
+        <button onclick="adjustOffset('x', 10)">+10</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Fine-tune Offset Y</label>
+      <div class="slider-row">
+        <button onclick="adjustOffset('y', -10)">-10</button>
+        <button onclick="adjustOffset('y', -1)">-1</button>
+        <button onclick="adjustOffset('y', 1)">+1</button>
+        <button onclick="adjustOffset('y', 10)">+10</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Fine-tune Scale</label>
+      <div class="slider-row">
+        <button onclick="adjustScale(-0.01)">-0.01</button>
+        <button onclick="adjustScale(-0.001)">-0.001</button>
+        <button onclick="adjustScale(0.001)">+0.001</button>
+        <button onclick="adjustScale(0.01)">+0.01</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Auto</label>
+      <div class="slider-row">
+        <button class="btn-auto" onclick="autoFineTune()">Auto Fine-tune</button>
+        <button class="btn-micro" onclick="microFineTune()">Micro Fine-tune</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Lock</label>
+      <div class="slider-row">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="lockScale"> Scale
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="smallRange"> Small range
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls micro-controls">
+    <div class="control-group">
+      <label>Micro Offset X</label>
+      <div class="slider-row">
+        <button onclick="adjustOffset('x', -1)">-1</button>
+        <button onclick="adjustOffset('x', -0.1)">-0.1</button>
+        <button onclick="adjustOffset('x', 0.1)">+0.1</button>
+        <button onclick="adjustOffset('x', 1)">+1</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Micro Offset Y</label>
+      <div class="slider-row">
+        <button onclick="adjustOffset('y', -1)">-1</button>
+        <button onclick="adjustOffset('y', -0.1)">-0.1</button>
+        <button onclick="adjustOffset('y', 0.1)">+0.1</button>
+        <button onclick="adjustOffset('y', 1)">+1</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Micro Scale</label>
+      <div class="slider-row">
+        <button onclick="adjustScale(-0.001)">-0.001</button>
+        <button onclick="adjustScale(-0.0001)">-0.0001</button>
+        <button onclick="adjustScale(0.0001)">+0.0001</button>
+        <button onclick="adjustScale(0.001)">+0.001</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="score-display">
+    Match Score: <span id="scoreValue" class="score-value">-</span>
+    <span id="scoreHint" style="font-size:12px; color:#888;"></span>
+  </div>
+
+  <div class="status" id="status">Select maps and click "Load Maps" to begin.</div>
+
+  <div class="canvas-container" id="canvasContainer" style="width: 100%; height: 800px;">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script>
+    const MAPS_PATH = '../public/maps';
+
+    let baseCanvas = null;
+    let subCanvas = null;
+    let baseConfig = null;
+    let subConfig = null;
+    let baseTotalSize = 0;
+    let subTotalSize = 0;
+
+    // Cached image data for correlation
+    let baseImageData = null;
+    let subImageData = null;
+    let workSize = 4096; // Higher resolution for better matching
+
+    // View state
+    let viewX = 0;
+    let viewY = 0;
+    let viewZoom = 0;
+
+    // Alignment params
+    let offsetX = 0;
+    let offsetY = 0;
+    let scale = 0.5;
+    let opacity = 0.7;
+
+    // Undo history
+    let undoStack = [];
+    const MAX_UNDO = 50;
+
+    function saveState() {
+      undoStack.push({ offsetX, offsetY, scale });
+      if (undoStack.length > MAX_UNDO) undoStack.shift();
+      document.getElementById('undoBtn').disabled = false;
+    }
+
+    function undo() {
+      if (undoStack.length === 0) return;
+      const state = undoStack.pop();
+      offsetX = state.offsetX;
+      offsetY = state.offsetY;
+      scale = state.scale;
+      updateSliders();
+      render();
+      updateScoreAndResult();
+      document.getElementById('undoBtn').disabled = undoStack.length === 0;
+    }
+
+    // For center-based scaling
+    function getOverlayCenter() {
+      const worldSize = subTotalSize * scale;
+      return {
+        x: offsetX + worldSize / 2,
+        y: offsetY + worldSize / 2
+      };
+    }
+
+    function setScaleAroundCenter(newScale) {
+      const center = getOverlayCenter();
+      scale = newScale;
+      const newWorldSize = subTotalSize * scale;
+      offsetX = center.x - newWorldSize / 2;
+      offsetY = center.y - newWorldSize / 2;
+    }
+
+    // Drag state
+    let isDragging = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('canvasContainer');
+
+    function setStatus(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load: ${src}`));
+        img.src = src;
+      });
+    }
+
+    async function loadMapTiles(mapName) {
+      const configRes = await fetch(`${MAPS_PATH}/${mapName}/config.json`);
+      const config = await configRes.json();
+
+      const maxGridSize = config.lods[0]?.gridSize || 1;
+      const totalSize = config.tileSize * maxGridSize;
+
+      // Use lowest LOD for faster loading
+      const lod = config.lods[config.lods.length - 1];
+
+      const canvas = document.createElement('canvas');
+      canvas.width = totalSize;
+      canvas.height = totalSize;
+      const ctx = canvas.getContext('2d');
+
+      const tileWorldSize = totalSize / lod.gridSize;
+
+      for (let y = 0; y < lod.gridSize; y++) {
+        for (let x = 0; x < lod.gridSize; x++) {
+          const index = y * lod.gridSize + x;
+          const filename = lod.pattern.replace('{index}', index);
+          try {
+            const img = await loadImage(`${MAPS_PATH}/${mapName}/${filename}`);
+            ctx.drawImage(img, x * tileWorldSize, y * tileWorldSize, tileWorldSize, tileWorldSize);
+          } catch (e) {
+            console.warn(`Failed to load tile: ${filename}`);
+          }
+        }
+      }
+
+      return { canvas, config, totalSize };
+    }
+
+    async function loadMaps() {
+      const baseMapName = document.getElementById('baseMap').value;
+      const subMapName = document.getElementById('subMap').value;
+
+      try {
+        setStatus('Loading base map...');
+        const base = await loadMapTiles(baseMapName);
+        baseCanvas = base.canvas;
+        baseConfig = base.config;
+        baseTotalSize = base.totalSize;
+
+        setStatus('Loading sub map...');
+        const sub = await loadMapTiles(subMapName);
+        subCanvas = sub.canvas;
+        subConfig = sub.config;
+        subTotalSize = sub.totalSize;
+
+        // Create downsampled versions for correlation
+        setStatus('Preparing correlation data...');
+        const baseSmall = document.createElement('canvas');
+        baseSmall.width = workSize;
+        baseSmall.height = workSize;
+        baseSmall.getContext('2d').drawImage(baseCanvas, 0, 0, workSize, workSize);
+        baseImageData = baseSmall.getContext('2d').getImageData(0, 0, workSize, workSize);
+
+        const subSmall = document.createElement('canvas');
+        subSmall.width = workSize;
+        subSmall.height = workSize;
+        subSmall.getContext('2d').drawImage(subCanvas, 0, 0, workSize, workSize);
+        subImageData = subSmall.getContext('2d').getImageData(0, 0, workSize, workSize);
+
+        // Center view on base map
+        viewX = baseTotalSize / 2;
+        viewY = baseTotalSize / 2;
+        viewZoom = -1;
+
+        // Check if base config has overlay settings for the selected submap
+        const existingOverlay = baseConfig.overlays?.find(o => o.map === subMapName);
+        if (existingOverlay) {
+          offsetX = existingOverlay.offsetX ?? baseTotalSize / 4;
+          offsetY = existingOverlay.offsetY ?? baseTotalSize / 4;
+          scale = existingOverlay.scale ?? 0.5;
+          setStatus(`Loaded existing overlay settings from ${baseMapName}/config.json`);
+        } else {
+          // Set initial offset to center of base map
+          offsetX = baseTotalSize / 4;
+          offsetY = baseTotalSize / 4;
+          scale = 0.5;
+        }
+
+        // Clear undo stack and reset workers for new image data
+        undoStack = [];
+        document.getElementById('undoBtn').disabled = true;
+        workersInitialized = false;  // Force workers to reinitialize with new image data
+
+        updateSliders();
+        resizeCanvas();
+        render();
+        updateScoreAndResult();
+
+        setStatus(`Loaded! Base: ${baseTotalSize}x${baseTotalSize}, Sub: ${subTotalSize}x${subTotalSize}. Drag to pan, scroll to zoom, use sliders to align.`);
+      } catch (e) {
+        setStatus(`Error: ${e.message}`);
+      }
+    }
+
+    function resizeCanvas() {
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      ctx.scale(dpr, dpr);
+    }
+
+    function worldToScreen(wx, wy) {
+      const rect = container.getBoundingClientRect();
+      const s = Math.pow(2, viewZoom);
+      return {
+        x: (wx - viewX) * s + rect.width / 2,
+        y: (wy - viewY) * s + rect.height / 2
+      };
+    }
+
+    function screenToWorld(sx, sy) {
+      const rect = container.getBoundingClientRect();
+      const s = Math.pow(2, viewZoom);
+      return {
+        x: viewX + (sx - rect.width / 2) / s,
+        y: viewY + (sy - rect.height / 2) / s
+      };
+    }
+
+    function render() {
+      if (!baseCanvas) return;
+
+      const rect = container.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const s = Math.pow(2, viewZoom);
+
+      ctx.fillStyle = '#0a0a0f';
+      ctx.fillRect(0, 0, w, h);
+
+      // Draw base map
+      const baseScreen = worldToScreen(0, 0);
+      const baseScreenSize = baseTotalSize * s;
+      ctx.drawImage(baseCanvas, baseScreen.x, baseScreen.y, baseScreenSize, baseScreenSize);
+
+      // Draw sub map overlay
+      if (subCanvas) {
+        const subWorldSize = subTotalSize * scale;
+        const subScreen = worldToScreen(offsetX, offsetY);
+        const subScreenSize = subWorldSize * s;
+
+        ctx.globalAlpha = opacity;
+        ctx.drawImage(subCanvas, subScreen.x, subScreen.y, subScreenSize, subScreenSize);
+        ctx.globalAlpha = 1;
+
+        // Draw border around overlay
+        ctx.strokeStyle = '#0f0';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(subScreen.x, subScreen.y, subScreenSize, subScreenSize);
+      }
+
+      // Draw crosshair at center
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(w/2 - 20, h/2);
+      ctx.lineTo(w/2 + 20, h/2);
+      ctx.moveTo(w/2, h/2 - 20);
+      ctx.lineTo(w/2, h/2 + 20);
+      ctx.stroke();
+    }
+
+    function updateSliders() {
+      document.getElementById('offsetX').value = offsetX;
+      document.getElementById('offsetY').value = offsetY;
+      document.getElementById('scale').value = scale;
+      document.getElementById('opacity').value = opacity;
+      updateSliderDisplays();
+    }
+
+    function updateSliderDisplays() {
+      document.getElementById('offsetXVal').textContent = offsetX.toFixed(1);
+      document.getElementById('offsetYVal').textContent = offsetY.toFixed(1);
+      document.getElementById('scaleVal').textContent = scale.toFixed(4);
+      document.getElementById('opacityVal').textContent = opacity.toFixed(2);
+    }
+
+    function updateFromSliders() {
+      saveState();
+      offsetX = parseFloat(document.getElementById('offsetX').value);
+      offsetY = parseFloat(document.getElementById('offsetY').value);
+      updateSliderDisplays();
+      render();
+      updateScoreAndResult();
+    }
+
+    function updateScaleFromSlider() {
+      saveState();
+      const newScale = parseFloat(document.getElementById('scale').value);
+      setScaleAroundCenter(newScale);
+      updateSliders();
+      render();
+      updateScoreAndResult();
+    }
+
+    function updateOpacityFromSlider() {
+      opacity = parseFloat(document.getElementById('opacity').value);
+      updateSliderDisplays();
+      render();
+    }
+
+    function adjustOffset(axis, delta) {
+      saveState();
+      if (axis === 'x') {
+        offsetX += delta;
+      } else {
+        offsetY += delta;
+      }
+      updateSliders();
+      render();
+      updateScoreAndResult();
+    }
+
+    function adjustScale(delta) {
+      saveState();
+      const newScale = Math.max(0.01, Math.min(2, scale + delta));
+      setScaleAroundCenter(newScale);
+      updateSliders();
+      render();
+      updateScoreAndResult();
+    }
+
+    // Compute correlation, ignoring transparent pixels in sub-map
+    function computeCorrelation(ox, oy, sc) {
+      if (!baseImageData || !subImageData) return -1;
+
+      const baseData = baseImageData.data;
+      const subData = subImageData.data;
+      const size = workSize;
+
+      const scaleFactor = workSize / baseTotalSize;
+      const subScaleFactor = workSize / subTotalSize;
+
+      // Overlay position and size in work coordinates
+      const workOx = ox * scaleFactor;
+      const workOy = oy * scaleFactor;
+      const overlayWorkSize = subTotalSize * sc * scaleFactor;
+
+      let sumBase = 0, sumSub = 0, sumBaseSq = 0, sumSubSq = 0, sumProduct = 0;
+      let count = 0;
+
+      const sampleStep = 1; // Sample every N pixels
+
+      for (let y = 0; y < overlayWorkSize; y += sampleStep) {
+        for (let x = 0; x < overlayWorkSize; x += sampleStep) {
+          // Position in base image (work coords)
+          const baseX = Math.floor(workOx + x);
+          const baseY = Math.floor(workOy + y);
+
+          if (baseX < 0 || baseX >= size || baseY < 0 || baseY >= size) continue;
+
+          // Position in sub image (work coords)
+          // x covers overlayWorkSize which maps to subTotalSize * sc world units
+          // We need to map back to sub image pixels
+          const subWorldX = x / scaleFactor / sc; // world coords in sub-map
+          const subWorldY = y / scaleFactor / sc;
+          const subX = Math.floor(subWorldX * subScaleFactor);
+          const subY = Math.floor(subWorldY * subScaleFactor);
+
+          if (subX < 0 || subX >= size || subY < 0 || subY >= size) continue;
+
+          const baseIdx = (baseY * size + baseX) * 4;
+          const subIdx = (subY * size + subX) * 4;
+
+          // Skip transparent pixels in sub-map (alpha < 128)
+          const subAlpha = subData[subIdx + 3];
+          if (subAlpha < 128) continue;
+
+          // Grayscale values
+          const baseVal = (baseData[baseIdx] * 0.299 + baseData[baseIdx + 1] * 0.587 + baseData[baseIdx + 2] * 0.114);
+          const subVal = (subData[subIdx] * 0.299 + subData[subIdx + 1] * 0.587 + subData[subIdx + 2] * 0.114);
+
+          sumBase += baseVal;
+          sumSub += subVal;
+          sumBaseSq += baseVal * baseVal;
+          sumSubSq += subVal * subVal;
+          sumProduct += baseVal * subVal;
+          count++;
+        }
+      }
+
+      if (count < 100) return -1;
+
+      const meanBase = sumBase / count;
+      const meanSub = sumSub / count;
+      const varBase = sumBaseSq / count - meanBase * meanBase;
+      const varSub = sumSubSq / count - meanSub * meanSub;
+      const covar = sumProduct / count - meanBase * meanSub;
+
+      if (varBase <= 0 || varSub <= 0) return 0;
+
+      return covar / Math.sqrt(varBase * varSub);
+    }
+
+    function updateScoreDisplay(score) {
+      const scoreEl = document.getElementById('scoreValue');
+      const hintEl = document.getElementById('scoreHint');
+
+      if (score < 0) {
+        scoreEl.textContent = 'N/A';
+        scoreEl.className = 'score-value';
+        hintEl.textContent = '(not enough overlap)';
+      } else {
+        scoreEl.textContent = score.toFixed(4);
+        if (score >= 0.7) {
+          scoreEl.className = 'score-value score-good';
+          hintEl.textContent = '(good match!)';
+        } else if (score >= 0.4) {
+          scoreEl.className = 'score-value score-medium';
+          hintEl.textContent = '(partial match)';
+        } else {
+          scoreEl.className = 'score-value score-bad';
+          hintEl.textContent = '(poor match)';
+        }
+      }
+    }
+
+    function updateScoreAndResult() {
+      const score = computeCorrelation(offsetX, offsetY, scale);
+      updateScoreDisplay(score);
+      updateResult();
+    }
+
+    function updateResult() {
+      // Config output removed - use Save button to download config
+    }
+
+    async function saveConfig() {
+      if (!baseConfig) {
+        setStatus('Load maps first!');
+        return;
+      }
+
+      const baseMapName = document.getElementById('baseMap').value;
+      const subMapName = document.getElementById('subMap').value;
+
+      // Initialize overlays array if it doesn't exist
+      if (!baseConfig.overlays) {
+        baseConfig.overlays = [];
+      }
+
+      // Find existing overlay or create new one
+      const existingIndex = baseConfig.overlays.findIndex(o => o.map === subMapName);
+      const overlayData = {
+        map: subMapName,
+        offsetX: parseFloat(offsetX.toFixed(1)),
+        offsetY: parseFloat(offsetY.toFixed(1)),
+        scale: parseFloat(scale.toFixed(4))
+      };
+
+      if (existingIndex >= 0) {
+        baseConfig.overlays[existingIndex] = overlayData;
+      } else {
+        baseConfig.overlays.push(overlayData);
+      }
+
+      // Save the config file
+      try {
+        const configPath = `${MAPS_PATH}/${baseMapName}/config.json`;
+        const configJson = JSON.stringify(baseConfig, null, 2);
+
+        // Create a download link since we can't write directly from browser
+        const blob = new Blob([configJson], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'config.json';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        setStatus(`Config downloaded! Move it to ${baseMapName}/config.json to apply.`);
+      } catch (e) {
+        setStatus(`Error saving: ${e.message}`);
+      }
+    }
+
+    // Create worker code for parallel computation
+    function createWorkerCode() {
+      return `
+        function computeCorrelationWorker(baseData, subData, size, baseTotalSize, subTotalSize, workSize, ox, oy, sc) {
+          const scaleFactor = workSize / baseTotalSize;
+          const subScaleFactor = workSize / subTotalSize;
+
+          const workOx = ox * scaleFactor;
+          const workOy = oy * scaleFactor;
+          const overlayWorkSize = subTotalSize * sc * scaleFactor;
+
+          let sumBase = 0, sumSub = 0, sumBaseSq = 0, sumSubSq = 0, sumProduct = 0;
+          let count = 0;
+
+          const sampleStep = 1;
+
+          for (let y = 0; y < overlayWorkSize; y += sampleStep) {
+            for (let x = 0; x < overlayWorkSize; x += sampleStep) {
+              const baseX = Math.floor(workOx + x);
+              const baseY = Math.floor(workOy + y);
+
+              if (baseX < 0 || baseX >= size || baseY < 0 || baseY >= size) continue;
+
+              const subWorldX = x / scaleFactor / sc;
+              const subWorldY = y / scaleFactor / sc;
+              const subX = Math.floor(subWorldX * subScaleFactor);
+              const subY = Math.floor(subWorldY * subScaleFactor);
+
+              if (subX < 0 || subX >= size || subY < 0 || subY >= size) continue;
+
+              const baseIdx = (baseY * size + baseX) * 4;
+              const subIdx = (subY * size + subX) * 4;
+
+              const subAlpha = subData[subIdx + 3];
+              if (subAlpha < 128) continue;
+
+              const baseVal = (baseData[baseIdx] * 0.299 + baseData[baseIdx + 1] * 0.587 + baseData[baseIdx + 2] * 0.114);
+              const subVal = (subData[subIdx] * 0.299 + subData[subIdx + 1] * 0.587 + subData[subIdx + 2] * 0.114);
+
+              sumBase += baseVal;
+              sumSub += subVal;
+              sumBaseSq += baseVal * baseVal;
+              sumSubSq += subVal * subVal;
+              sumProduct += baseVal * subVal;
+              count++;
+            }
+          }
+
+          if (count < 100) return -1;
+
+          const meanBase = sumBase / count;
+          const meanSub = sumSub / count;
+          const varBase = sumBaseSq / count - meanBase * meanBase;
+          const varSub = sumSubSq / count - meanSub * meanSub;
+          const covar = sumProduct / count - meanBase * meanSub;
+
+          if (varBase <= 0 || varSub <= 0) return 0;
+
+          return covar / Math.sqrt(varBase * varSub);
+        }
+
+        // Cached data
+        let cachedBaseData = null;
+        let cachedSubData = null;
+        let cachedSize = 0;
+        let cachedBaseTotalSize = 0;
+        let cachedSubTotalSize = 0;
+        let cachedWorkSize = 0;
+
+        self.onmessage = function(e) {
+          const { type, workerId } = e.data;
+
+          if (type === 'init') {
+            // Cache the image data
+            cachedBaseData = new Uint8ClampedArray(e.data.baseData);
+            cachedSubData = new Uint8ClampedArray(e.data.subData);
+            cachedSize = e.data.size;
+            cachedBaseTotalSize = e.data.baseTotalSize;
+            cachedSubTotalSize = e.data.subTotalSize;
+            cachedWorkSize = e.data.workSize;
+            self.postMessage({ type: 'ready', workerId });
+            return;
+          }
+
+          if (type === 'search') {
+            const { tasks } = e.data;
+
+            let bestScore = -1;
+            let bestParams = null;
+            let completed = 0;
+
+            for (const task of tasks) {
+              const score = computeCorrelationWorker(cachedBaseData, cachedSubData, cachedSize, cachedBaseTotalSize, cachedSubTotalSize, cachedWorkSize, task.ox, task.oy, task.sc);
+              if (score > bestScore) {
+                bestScore = score;
+                bestParams = task;
+              }
+              completed++;
+              if (completed % 100 === 0) {
+                self.postMessage({ type: 'progress', workerId, completed, total: tasks.length });
+              }
+            }
+
+            self.postMessage({ type: 'result', workerId, bestScore, bestParams });
+          }
+        };
+      `;
+    }
+
+    const NUM_WORKERS = navigator.hardwareConcurrency || 4;
+    let workers = [];
+    let workersInitialized = false;
+
+    function createWorkers() {
+      if (workers.length > 0) {
+        workers.forEach(w => w.terminate());
+        workers = [];
+      }
+
+      const blob = new Blob([createWorkerCode()], { type: 'application/javascript' });
+      const workerUrl = URL.createObjectURL(blob);
+
+      for (let i = 0; i < NUM_WORKERS; i++) {
+        workers.push(new Worker(workerUrl));
+      }
+      workersInitialized = false;
+    }
+
+    function initWorkersWithData() {
+      if (workersInitialized) return Promise.resolve();
+
+      // Send image data to each worker once
+      const promises = workers.map((worker, i) => {
+        return new Promise((resolve) => {
+          worker.onmessage = (e) => {
+            if (e.data.type === 'ready') resolve();
+          };
+          worker.postMessage({
+            type: 'init',
+            baseData: baseImageData.data,
+            subData: subImageData.data,
+            size: workSize,
+            baseTotalSize,
+            subTotalSize,
+            workSize,
+            workerId: i
+          });
+        });
+      });
+
+      return Promise.all(promises).then(() => {
+        workersInitialized = true;
+      });
+    }
+
+    function terminateWorkers() {
+      workers.forEach(w => w.terminate());
+      workers = [];
+      workersInitialized = false;
+    }
+
+    async function parallelSearch(tasks, progressCallback) {
+      if (workers.length === 0) createWorkers();
+      await initWorkersWithData();
+
+      const chunkSize = Math.ceil(tasks.length / NUM_WORKERS);
+      const chunks = [];
+      for (let i = 0; i < NUM_WORKERS; i++) {
+        chunks.push(tasks.slice(i * chunkSize, (i + 1) * chunkSize));
+      }
+
+      const workerProgress = new Array(NUM_WORKERS).fill(0);
+
+      const promises = chunks.map((chunk, i) => {
+        return new Promise((resolve) => {
+          workers[i].onmessage = (e) => {
+            if (e.data.type === 'progress') {
+              workerProgress[e.data.workerId] = e.data.completed;
+              const totalProgress = workerProgress.reduce((a, b) => a + b, 0);
+              progressCallback(totalProgress, tasks.length);
+            } else if (e.data.type === 'result') {
+              resolve(e.data);
+            }
+          };
+          workers[i].postMessage({
+            type: 'search',
+            tasks: chunk,
+            workerId: i
+          });
+        });
+      });
+
+      const results = await Promise.all(promises);
+
+      let bestScore = -1;
+      let bestParams = null;
+      for (const result of results) {
+        if (result.bestScore > bestScore) {
+          bestScore = result.bestScore;
+          bestParams = result.bestParams;
+        }
+      }
+
+      return { bestScore, bestParams };
+    }
+
+    // Auto fine-tune using exhaustive local search with parallel workers
+    async function autoFineTune() {
+      if (!baseCanvas || !subCanvas) {
+        setStatus('Load maps first!');
+        return;
+      }
+
+      saveState();
+
+      const btn = document.querySelector('.btn-auto');
+      const microBtn = document.querySelector('.btn-micro');
+      btn.disabled = true;
+      microBtn.disabled = true;
+      setStatus(`Auto fine-tuning - searching with ${NUM_WORKERS} cores...`);
+
+      const lockScale = document.getElementById('lockScale').checked;
+      const smallRange = document.getElementById('smallRange').checked;
+
+      let bestScore = computeCorrelation(offsetX, offsetY, scale);
+      let bestOffsetX = offsetX;
+      let bestOffsetY = offsetY;
+      let bestScale = scale;
+
+      // Coarse search
+      const offsetRange = smallRange ? 100 : 200;
+      const offsetStep = 10;
+      const scaleMin = lockScale ? scale : Math.max(0.05, scale - 0.1);
+      const scaleMax = lockScale ? scale : Math.min(2, scale + 0.1);
+      const scaleStep = 0.01;
+
+      // Build task list for coarse search
+      let tasks = [];
+      for (let sc = scaleMin; sc <= scaleMax; sc += scaleStep) {
+        for (let dy = -offsetRange; dy <= offsetRange; dy += offsetStep) {
+          for (let dx = -offsetRange; dx <= offsetRange; dx += offsetStep) {
+            tasks.push({ ox: offsetX + dx, oy: offsetY + dy, sc });
+          }
+        }
+      }
+
+      let result = await parallelSearch(tasks, (completed, total) => {
+        setStatus(`Coarse search... ${Math.round(completed / total * 100)}% (${NUM_WORKERS} cores)`);
+      });
+
+      if (result.bestScore > bestScore) {
+        bestScore = result.bestScore;
+        bestOffsetX = result.bestParams.ox;
+        bestOffsetY = result.bestParams.oy;
+        bestScale = result.bestParams.sc;
+      }
+
+      // Medium refinement - step of 1 to catch all pixels including odd
+      setStatus('Refining (medium)...');
+      const medRange = offsetStep * 2;
+      const medStep = 1;  // Fixed: was 2, now 1 to detect odd pixels
+      const medScaleRange = scaleStep * 2;
+      const medScaleStep = 0.002;
+
+      tasks = [];
+      for (let sc = bestScale - medScaleRange; sc <= bestScale + medScaleRange; sc += medScaleStep) {
+        if (sc <= 0.01 || sc > 2) continue;
+        if (lockScale && sc !== bestScale) continue;
+        for (let dy = -medRange; dy <= medRange; dy += medStep) {
+          for (let dx = -medRange; dx <= medRange; dx += medStep) {
+            tasks.push({ ox: bestOffsetX + dx, oy: bestOffsetY + dy, sc });
+          }
+        }
+      }
+
+      result = await parallelSearch(tasks, (completed, total) => {
+        setStatus(`Medium refinement... ${Math.round(completed / total * 100)}%`);
+      });
+
+      if (result.bestScore > bestScore) {
+        bestScore = result.bestScore;
+        bestOffsetX = result.bestParams.ox;
+        bestOffsetY = result.bestParams.oy;
+        bestScale = result.bestParams.sc;
+      }
+
+      // Fine refinement
+      setStatus('Refining (fine)...');
+      const fineRange = 5;
+      const fineStep = 1;
+      const fineScaleRange = medScaleStep * 2;
+      const fineScaleStep = 0.0005;
+
+      tasks = [];
+      for (let sc = bestScale - fineScaleRange; sc <= bestScale + fineScaleRange; sc += fineScaleStep) {
+        if (sc <= 0.01 || sc > 2) continue;
+        if (lockScale && Math.abs(sc - bestScale) > 0.0001) continue;
+        for (let dy = -fineRange; dy <= fineRange; dy += fineStep) {
+          for (let dx = -fineRange; dx <= fineRange; dx += fineStep) {
+            tasks.push({ ox: bestOffsetX + dx, oy: bestOffsetY + dy, sc });
+          }
+        }
+      }
+
+      result = await parallelSearch(tasks, (completed, total) => {
+        setStatus(`Fine refinement... ${Math.round(completed / total * 100)}%`);
+      });
+
+      if (result.bestScore > bestScore) {
+        bestScore = result.bestScore;
+        bestOffsetX = result.bestParams.ox;
+        bestOffsetY = result.bestParams.oy;
+        bestScale = result.bestParams.sc;
+      }
+
+      offsetX = bestOffsetX;
+      offsetY = bestOffsetY;
+      scale = bestScale;
+
+      updateSliders();
+      render();
+      updateScoreAndResult();
+      btn.disabled = false;
+      microBtn.disabled = false;
+      setStatus(`Fine-tuning complete! Best score: ${bestScore.toFixed(4)}`);
+    }
+
+    // Micro fine-tune for decimal precision
+    async function microFineTune() {
+      if (!baseCanvas || !subCanvas) {
+        setStatus('Load maps first!');
+        return;
+      }
+
+      saveState();
+
+      const btn = document.querySelector('.btn-auto');
+      const microBtn = document.querySelector('.btn-micro');
+      btn.disabled = true;
+      microBtn.disabled = true;
+      setStatus('Micro fine-tuning with decimal precision...');
+
+      const lockScale = document.getElementById('lockScale').checked;
+
+      let bestScore = computeCorrelation(offsetX, offsetY, scale);
+      let bestOffsetX = offsetX;
+      let bestOffsetY = offsetY;
+      let bestScale = scale;
+
+      // Micro offset search with 0.1 step
+      const microOffsetRange = 2;
+      const microOffsetStep = 0.1;
+      const microScaleRange = 0.002;
+      const microScaleStep = 0.0001;
+
+      let tasks = [];
+      for (let sc = bestScale - microScaleRange; sc <= bestScale + microScaleRange; sc += microScaleStep) {
+        if (sc <= 0.01 || sc > 2) continue;
+        if (lockScale && Math.abs(sc - scale) > 0.00001) continue;
+        for (let dy = -microOffsetRange; dy <= microOffsetRange; dy += microOffsetStep) {
+          for (let dx = -microOffsetRange; dx <= microOffsetRange; dx += microOffsetStep) {
+            tasks.push({ ox: offsetX + dx, oy: offsetY + dy, sc });
+          }
+        }
+      }
+
+      const result = await parallelSearch(tasks, (completed, total) => {
+        setStatus(`Micro refinement... ${Math.round(completed / total * 100)}% (${NUM_WORKERS} cores)`);
+      });
+
+      if (result.bestScore > bestScore) {
+        bestScore = result.bestScore;
+        bestOffsetX = result.bestParams.ox;
+        bestOffsetY = result.bestParams.oy;
+        bestScale = result.bestParams.sc;
+      }
+
+      offsetX = bestOffsetX;
+      offsetY = bestOffsetY;
+      scale = bestScale;
+
+      updateSliders();
+      render();
+      updateScoreAndResult();
+      btn.disabled = false;
+      microBtn.disabled = false;
+      setStatus(`Micro fine-tuning complete! Best score: ${bestScore.toFixed(4)}`);
+    }
+
+    // Mouse/touch handlers
+    container.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      container.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - lastMouseX;
+      const dy = e.clientY - lastMouseY;
+      const s = Math.pow(2, viewZoom);
+      viewX -= dx / s;
+      viewY -= dy / s;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      render();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      container.style.cursor = 'grab';
+    });
+
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = container.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const worldBefore = screenToWorld(mouseX, mouseY);
+
+      viewZoom += e.deltaY > 0 ? -0.1 : 0.1;
+      viewZoom = Math.max(-4, Math.min(3, viewZoom));
+
+      const worldAfter = screenToWorld(mouseX, mouseY);
+      viewX += worldBefore.x - worldAfter.x;
+      viewY += worldBefore.y - worldAfter.y;
+
+      render();
+    });
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      render();
+    });
+
+    // Initial setup
+    resizeCanvas();
+  </script>
+</body>
+</html>
