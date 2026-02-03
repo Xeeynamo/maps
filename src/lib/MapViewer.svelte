@@ -65,6 +65,32 @@
   // Mouse position in UE4 world coordinates (for coordinate display)
   let mouseUE4: { x: number; y: number; z: number } | null = $state(null);
 
+  // Context menu state
+  interface ContextMenuState {
+    visible: boolean;
+    screenX: number;
+    screenY: number;
+    worldX: number;
+    worldY: number;
+    mode: 'initial' | 'measuring';
+  }
+  let contextMenu: ContextMenuState = $state({
+    visible: false,
+    screenX: 0,
+    screenY: 0,
+    worldX: 0,
+    worldY: 0,
+    mode: 'initial'
+  });
+
+  // Measurement state
+  interface MeasurementPoint {
+    worldX: number;
+    worldY: number;
+  }
+  let measurementPointA: MeasurementPoint | null = $state(null);
+  let measurementPointB: MeasurementPoint | null = $state(null);
+
   const MIN_ZOOM = -6;
   const MAX_ZOOM = 6;
   const PAN_SPEED = 100;
@@ -139,6 +165,118 @@
     for (const overlay of overlays) {
       if (overlay.visible) {
         renderOverlay(ctx, overlay, width, height, pixelRatio, scale);
+      }
+    }
+
+    // Render measurement pins and line
+    renderMeasurement(ctx, width, height, pixelRatio);
+  }
+
+  function calculateDistanceMeters(pointA: MeasurementPoint, pointB: MeasurementPoint): number | null {
+    if (!config.pixelPerCm || !config.origin) return null;
+
+    // Convert viewer coordinates to UE4 coordinates
+    const ue4A = viewerToUE4(pointA.worldX, pointA.worldY, config.pixelPerCm, config.origin);
+    const ue4B = viewerToUE4(pointB.worldX, pointB.worldY, config.pixelPerCm, config.origin);
+
+    // Calculate distance in UE4 units (centimeters)
+    const dx = ue4B.x - ue4A.x;
+    const dy = ue4B.y - ue4A.y;
+    const distanceCm = Math.sqrt(dx * dx + dy * dy);
+
+    // Convert to meters
+    return distanceCm / 100;
+  }
+
+  function formatDistance(meters: number): string {
+    if (meters < 1000) {
+      return `${Math.round(meters)}m`;
+    } else {
+      return `${(meters / 1000).toFixed(2)}km`;
+    }
+  }
+
+  function renderMeasurement(ctx: CanvasRenderingContext2D, width: number, height: number, pixelRatio: number) {
+    const PIN_RADIUS = 6;
+    const LINE_WIDTH = 3;
+    const OUTLINE_WIDTH = 1.5;
+
+    // Draw pin at point A
+    if (measurementPointA) {
+      const screenA = worldToScreen(measurementPointA.worldX, measurementPointA.worldY, viewport, width / pixelRatio, height / pixelRatio);
+      const sx = screenA.x * pixelRatio;
+      const sy = screenA.y * pixelRatio;
+
+      // Black outline
+      ctx.beginPath();
+      ctx.arc(sx, sy, PIN_RADIUS + OUTLINE_WIDTH, 0, Math.PI * 2);
+      ctx.fillStyle = '#000';
+      ctx.fill();
+
+      // White fill
+      ctx.beginPath();
+      ctx.arc(sx, sy, PIN_RADIUS, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+    }
+
+    // Draw line and pin at point B
+    if (measurementPointA && measurementPointB) {
+      const screenA = worldToScreen(measurementPointA.worldX, measurementPointA.worldY, viewport, width / pixelRatio, height / pixelRatio);
+      const screenB = worldToScreen(measurementPointB.worldX, measurementPointB.worldY, viewport, width / pixelRatio, height / pixelRatio);
+
+      const sxA = screenA.x * pixelRatio;
+      const syA = screenA.y * pixelRatio;
+      const sxB = screenB.x * pixelRatio;
+      const syB = screenB.y * pixelRatio;
+
+      // Draw line with white outline and black center
+      ctx.lineWidth = LINE_WIDTH + OUTLINE_WIDTH * 2;
+      ctx.strokeStyle = '#fff';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(sxA, syA);
+      ctx.lineTo(sxB, syB);
+      ctx.stroke();
+
+      ctx.lineWidth = LINE_WIDTH;
+      ctx.strokeStyle = '#000';
+      ctx.beginPath();
+      ctx.moveTo(sxA, syA);
+      ctx.lineTo(sxB, syB);
+      ctx.stroke();
+
+      // Draw pin at point B
+      // Black outline
+      ctx.beginPath();
+      ctx.arc(sxB, syB, PIN_RADIUS + OUTLINE_WIDTH, 0, Math.PI * 2);
+      ctx.fillStyle = '#000';
+      ctx.fill();
+
+      // White fill
+      ctx.beginPath();
+      ctx.arc(sxB, syB, PIN_RADIUS, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+
+      // Draw distance label at point B
+      const distanceMeters = calculateDistanceMeters(measurementPointA, measurementPointB);
+      if (distanceMeters !== null) {
+        const label = formatDistance(distanceMeters);
+        const fontSize = 14 * pixelRatio;
+        ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
+
+        const labelX = sxB + 12 * pixelRatio;
+        const labelY = syB - 12 * pixelRatio;
+
+        // Text with white outline (stroke) and black fill
+        ctx.lineWidth = 3 * pixelRatio;
+        ctx.strokeStyle = '#fff';
+        ctx.lineJoin = 'round';
+        ctx.strokeText(label, labelX, labelY);
+
+        ctx.fillStyle = '#000';
+        ctx.fillText(label, labelX, labelY);
       }
     }
   }
@@ -223,9 +361,63 @@
   }
 
   function handleMouseDown(e: MouseEvent) {
+    // Close context menu on left click
+    if (e.button === 0 && contextMenu.visible) {
+      contextMenu.visible = false;
+    }
     isDragging = true;
     lastMouseX = e.clientX;
     lastMouseY = e.clientY;
+  }
+
+  function handleContextMenu(e: MouseEvent) {
+    e.preventDefault();
+
+    const pixelRatio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const world = screenToWorld(mouseX, mouseY, viewport, canvas.width / pixelRatio, canvas.height / pixelRatio);
+
+    // Determine context menu mode:
+    // - 'measuring': point A is set, waiting for point B
+    // - 'initial': no measurement or measurement complete
+    const mode = measurementPointA && !measurementPointB ? 'measuring' : 'initial';
+
+    contextMenu = {
+      visible: true,
+      screenX: e.clientX,
+      screenY: e.clientY,
+      worldX: world.x,
+      worldY: world.y,
+      mode
+    };
+  }
+
+  function handleMeasureDistance() {
+    measurementPointA = {
+      worldX: contextMenu.worldX,
+      worldY: contextMenu.worldY
+    };
+    measurementPointB = null;
+    contextMenu.visible = false;
+    requestRender();
+  }
+
+  function handleDistanceToHere() {
+    measurementPointB = {
+      worldX: contextMenu.worldX,
+      worldY: contextMenu.worldY
+    };
+    contextMenu.visible = false;
+    requestRender();
+  }
+
+  function handleClearMeasurement() {
+    measurementPointA = null;
+    measurementPointB = null;
+    contextMenu.visible = false;
+    requestRender();
   }
 
   function updateMouseUE4(clientX: number, clientY: number) {
@@ -683,10 +875,36 @@
   onmouseup={handleMouseUp}
   onmouseleave={handleMouseLeave}
   onwheel={handleWheel}
+  oncontextmenu={handleContextMenu}
   ontouchstart={handleTouchStart}
   ontouchmove={handleTouchMove}
   ontouchend={handleTouchEnd}
 ></canvas>
+
+{#if contextMenu.visible}
+  <div
+    class="context-menu"
+    style="left: {contextMenu.screenX}px; top: {contextMenu.screenY}px;"
+  >
+    {#if contextMenu.mode === 'measuring'}
+      <button class="context-menu-item" onclick={handleDistanceToHere}>
+        Distance to here
+      </button>
+      <button class="context-menu-item" onclick={handleClearMeasurement}>
+        Clear measurement
+      </button>
+    {:else}
+      <button class="context-menu-item" onclick={handleMeasureDistance}>
+        Measure distance
+      </button>
+      {#if measurementPointA && measurementPointB}
+        <button class="context-menu-item" onclick={handleClearMeasurement}>
+          Clear measurement
+        </button>
+      {/if}
+    {/if}
+  </div>
+{/if}
 
 {#if mouseUE4}
   <div class="coord-bar">
@@ -991,6 +1209,38 @@
     z-index: 100;
     pointer-events: none;
     letter-spacing: 0.5px;
+  }
+
+  .context-menu {
+    position: fixed;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+    padding: 4px 0;
+    min-width: 160px;
+    z-index: 200;
+    font-family: system-ui, sans-serif;
+    font-size: 13px;
+  }
+
+  .context-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    text-align: left;
+    color: #222;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .context-menu-item:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  .context-menu-item:active {
+    background: rgba(0, 0, 0, 0.12);
   }
 
   @media (max-width: 768px) {
