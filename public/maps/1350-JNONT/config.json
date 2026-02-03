@@ -1,6 +1,8 @@
 {
   "name": "1350-JNONT",
   "tileSize": 256,
+  "pixelPerCm": 0.03236389,
+  "origin": { "x": 213919.44, "y": 213983.109, "z": 0 },
   "lods": [
     {
       "level": 0,

@@ -1,6 +1,8 @@
 {
   "name": "3121-FORMP",
   "tileSize": 256,
+  "pixelPerCm": 0.09124756,
+  "origin": { "x": -2855.045, "y": -163634.02, "z": 0 },
   "lods": [
     {
       "level": 0,

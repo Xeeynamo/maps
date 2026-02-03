@@ -1,6 +1,8 @@
 {
   "name": "3000-NORTC",
   "tileSize": 256,
+  "pixelPerCm": 0.013320923,
+  "origin": { "x": -467200, "y": -1257200, "z": -26200 },
   "lods": [
     {
       "level": 0,
@@ -40,11 +42,6 @@
     }
   ],
   "overlays": [
-    {
-      "map": "3100-FOREA",
-      "offsetX": -530.8,
-      "offsetY": -531.1,
-      "scale": 1.1295
-    }
+    { "map": "3100-FOREA", "offsetX": -530.0, "offsetY": -530.0 }
   ]
 }

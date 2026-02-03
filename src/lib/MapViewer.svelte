@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import type { MapConfig, Viewport, LodConfig, OverlayConfig, GameConfig } from './types';
   import { TileManager } from './TileManager';
-  import { screenToWorld, worldToScreen, selectLOD, getVisibleTiles, clamp } from './utils';
+  import { screenToWorld, worldToScreen, selectLOD, getVisibleTiles, clamp, viewerToUE4, computeOverlayTransform } from './utils';
 
   interface Props {
     config: MapConfig;
@@ -61,6 +61,9 @@
 
   let lastTouchDist = 0;
   let lastTouchCenter = { x: 0, y: 0 };
+
+  // Mouse position in UE4 world coordinates (for coordinate display)
+  let mouseUE4: { x: number; y: number; z: number } | null = $state(null);
 
   const MIN_ZOOM = -6;
   const MAX_ZOOM = 6;
@@ -225,7 +228,22 @@
     lastMouseY = e.clientY;
   }
 
+  function updateMouseUE4(clientX: number, clientY: number) {
+    if (!canvas || !config.pixelPerCm || !config.origin) {
+      mouseUE4 = null;
+      return;
+    }
+    const pixelRatio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = clientX - rect.left;
+    const mouseY = clientY - rect.top;
+    const world = screenToWorld(mouseX, mouseY, viewport, canvas.width / pixelRatio, canvas.height / pixelRatio);
+    mouseUE4 = viewerToUE4(world.x, world.y, config.pixelPerCm, config.origin);
+  }
+
   function handleMouseMove(e: MouseEvent) {
+    updateMouseUE4(e.clientX, e.clientY);
+
     if (!isDragging) return;
 
     const dx = e.clientX - lastMouseX;
@@ -242,6 +260,11 @@
 
   function handleMouseUp() {
     isDragging = false;
+  }
+
+  function handleMouseLeave() {
+    isDragging = false;
+    mouseUE4 = null;
   }
 
   function handleWheel(e: WheelEvent) {
@@ -384,6 +407,7 @@
     parentOffsetX: number,
     parentOffsetY: number,
     parentScale: number,
+    parentMapConfig: MapConfig,
     currentIndex: { value: number }
   ): Promise<LoadResult> {
     const loaded: LoadedOverlay[] = [];
@@ -398,10 +422,16 @@
         const mapConfig: MapConfig = await response.json();
         const ovTileManager = new TileManager(mapConfig, overlayBasePath, requestRender);
 
+        // Use explicit overlay values if provided, otherwise compute from UE4 metadata
+        const computed = computeOverlayTransform(parentMapConfig, mapConfig);
+        const localOffsetX = overlayDef.offsetX ?? computed?.offsetX ?? 0;
+        const localOffsetY = overlayDef.offsetY ?? computed?.offsetY ?? 0;
+        const localScale = computed?.scale ?? 1;
+
         // Accumulate transform: child position in parent space -> parent position in root space
-        const worldOffsetX = parentOffsetX + overlayDef.offsetX * parentScale;
-        const worldOffsetY = parentOffsetY + overlayDef.offsetY * parentScale;
-        const worldScale = parentScale * overlayDef.scale;
+        const worldOffsetX = parentOffsetX + localOffsetX * parentScale;
+        const worldOffsetY = parentOffsetY + localOffsetY * parentScale;
+        const worldScale = parentScale * localScale;
 
         const myIndex = currentIndex.value++;
 
@@ -435,6 +465,7 @@
             worldOffsetX,
             worldOffsetY,
             worldScale,
+            mapConfig,
             currentIndex
           );
           loaded.push(...childResult.overlays);
@@ -465,7 +496,7 @@
     if (!config.overlays || config.overlays.length === 0) return;
 
     // Start with identity transform (offset 0,0 and scale 1)
-    const result = await loadOverlaysRecursive(config.overlays, 0, 0, 1, { value: 0 });
+    const result = await loadOverlaysRecursive(config.overlays, 0, 0, 1, config, { value: 0 });
     overlays = result.overlays;
     mapTree.children = result.treeNodes;
     requestRender();
@@ -509,12 +540,14 @@
 
     for (const overlay of config.overlays) {
       // Estimate overlay size (we don't have the config loaded yet, so use a default)
-      // This will be refined once overlays load
-      const estimatedSize = 8192 * overlay.scale;
-      minX = Math.min(minX, overlay.offsetX);
-      minY = Math.min(minY, overlay.offsetY);
-      maxX = Math.max(maxX, overlay.offsetX + estimatedSize);
-      maxY = Math.max(maxY, overlay.offsetY + estimatedSize);
+      // Scale is computed from pixelPerCm when overlays load, use 1 as estimate
+      const ovOffsetX = overlay.offsetX ?? 0;
+      const ovOffsetY = overlay.offsetY ?? 0;
+      const estimatedSize = 8192;
+      minX = Math.min(minX, ovOffsetX);
+      minY = Math.min(minY, ovOffsetY);
+      maxX = Math.max(maxX, ovOffsetX + estimatedSize);
+      maxY = Math.max(maxY, ovOffsetY + estimatedSize);
     }
 
     return { minX, minY, maxX, maxY };
@@ -648,12 +681,18 @@
   onmousedown={handleMouseDown}
   onmousemove={handleMouseMove}
   onmouseup={handleMouseUp}
-  onmouseleave={handleMouseUp}
+  onmouseleave={handleMouseLeave}
   onwheel={handleWheel}
   ontouchstart={handleTouchStart}
   ontouchmove={handleTouchMove}
   ontouchend={handleTouchEnd}
 ></canvas>
+
+{#if mouseUE4}
+  <div class="coord-bar">
+    X: {Math.round(mouseUE4.x)}  Y: {Math.round(mouseUE4.y)}  Z: {Math.round(mouseUE4.z)}
+  </div>
+{/if}
 
 {#if mapTree}
   <div class="tree-panel" class:collapsed={panelCollapsed}>
@@ -937,6 +976,21 @@
     background: rgba(106, 159, 255, 0.3);
     border-color: #6a9fff;
     color: #6a9fff;
+  }
+
+  .coord-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(20, 20, 30, 0.85);
+    color: #ccc;
+    font-family: monospace;
+    font-size: 13px;
+    padding: 6px 16px;
+    z-index: 100;
+    pointer-events: none;
+    letter-spacing: 0.5px;
   }
 
   @media (max-width: 768px) {

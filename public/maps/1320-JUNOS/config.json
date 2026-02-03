@@ -1,6 +1,8 @@
 {
   "name": "1320-JUNOS",
   "tileSize": 256,
+  "pixelPerCm": 0.20800781,
+  "origin": { "x": 483227, "y": 331574, "z": 0 },
   "lods": [
     {
       "level": 0,

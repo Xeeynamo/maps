@@ -1,6 +1,8 @@
 {
   "name": "2510-CSMOC",
   "tileSize": 256,
+  "pixelPerCm": 0.12205505,
+  "origin": { "x": -809819.08, "y": 521377.184, "z": 0 },
   "lods": [
     {
       "level": 0,

@@ -1,6 +1,8 @@
 {
   "name": "2350-GOLDS",
   "tileSize": 256,
+  "pixelPerCm": 0.04763794,
+  "origin": { "x": 14251.44, "y": -54352.332, "z": 0 },
   "lods": [
     {
       "level": 0,

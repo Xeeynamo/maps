@@ -1,6 +1,8 @@
 {
   "name": "2410-GONGV",
   "tileSize": 256,
+  "pixelPerCm": 0.14750671,
+  "origin": { "x": -607856.867, "y": 686804.9, "z": 0 },
   "lods": [
     {
       "level": 0,

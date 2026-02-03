@@ -1,6 +1,8 @@
 {
   "name": "2360-UNDRS",
   "tileSize": 256,
+  "pixelPerCm": 0.09196472,
+  "origin": { "x": -599280, "y": 440633.562, "z": 0 },
   "lods": [
     {
       "level": 0,

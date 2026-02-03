@@ -1,6 +1,8 @@
 {
   "name": "1110-KALMT",
   "tileSize": 256,
+  "pixelPerCm": 0.21730042,
+  "origin": { "x": 456680, "y": 86402.48, "z": 0 },
   "lods": [
     {
       "level": 0,

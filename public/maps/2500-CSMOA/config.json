@@ -1,6 +1,8 @@
 {
   "name": "2500-CSMOA",
   "tileSize": 256,
+  "pixelPerCm": 0.028427124,
+  "origin": { "x": -973899.8, "y": 368040.19, "z": -80000 },
   "lods": [
     {
       "level": 0,
@@ -40,11 +42,6 @@
     }
   ],
   "overlays": [
-    {
-      "map": "2510-CSMOC",
-      "offsetX": 4665.4,
-      "offsetY": 4332.1,
-      "scale": 0.2328
-    }
+    { "map": "2510-CSMOC", "offsetX": 4665.3, "offsetY": 4332.0 }
   ]
 }

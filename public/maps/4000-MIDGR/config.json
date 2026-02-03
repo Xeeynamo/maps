@@ -1,6 +1,8 @@
 {
   "name": "4000-MIDGR",
   "tileSize": 256,
+  "pixelPerCm": 0.089523315,
+  "origin": { "x": -11716.13, "y": -24600, "z": 0 },
   "lods": [
     {
       "level": 0,

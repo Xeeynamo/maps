@@ -1,6 +1,8 @@
 {
   "name": "2400-GONGA",
   "tileSize": 256,
+  "pixelPerCm": 0.029251099,
+  "origin": { "x": -726070, "y": 580990, "z": -60870 },
   "lods": [
     {
       "level": 0,
@@ -40,11 +42,6 @@
     }
   ],
   "overlays": [
-    {
-      "map": "2410-GONGV",
-      "offsetX": 3445.4,
-      "offsetY": 3094.6,
-      "scale": 0.1985
-    }
+    { "map": "2410-GONGV", "offsetX": 3446, "offsetY": 3095 }
   ]
 }

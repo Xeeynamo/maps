@@ -1,6 +1,8 @@
 {
   "name": "1200-GRASA",
   "tileSize": 256,
+  "pixelPerCm": 0.019317627,
+  "origin": { "x": 310061.44, "y": -51848.66, "z": -130000 },
   "lods": [
     {
       "level": 0,
@@ -40,11 +42,6 @@
     }
   ],
   "overlays": [
-    {
-      "map": "1110-KALMT",
-      "offsetX": 2812,
-      "offsetY": 2671,
-      "scale": 0.0895
-    }
+    { "map": "1110-KALMT", "offsetX": 2813.9, "offsetY": 2672.6 }
   ]
 }

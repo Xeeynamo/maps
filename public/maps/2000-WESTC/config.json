@@ -1,6 +1,8 @@
 {
   "name": "2000-WESTC",
   "tileSize": 256,
+  "pixelPerCm": 0.006652832,
+  "origin": { "x": -1394400, "y": -254400, "z": -26200 },
   "lods": [
     {
       "level": 0,
@@ -40,29 +42,9 @@
     }
   ],
   "overlays": [
-    {
-      "map": "2200-CORLA+After",
-      "offsetX": 4428,
-      "offsetY": 3400.1,
-      "scale": 0.3092
-    },
-    {
-      "map": "2400-GONGA",
-      "offsetX": 4453.6,
-      "offsetY": 5564.9,
-      "scale": 0.2276
-    },
-    {
-      "map": "2500-CSMOA",
-      "offsetX": 2805.5,
-      "offsetY": 4148.7,
-      "scale": 0.234
-    },
-    {
-      "map": "2600-NIBLA_Before",
-      "offsetX": 3957.9,
-      "offsetY": 2706.7,
-      "scale": 0.1961
-    }
+    { "map": "2200-CORLA+After", "offsetX": 4428, "offsetY": 3400.1 },
+    { "map": "2400-GONGA", "offsetX": 4454.3, "offsetY": 5565.6 },
+    { "map": "2500-CSMOA", "offsetX": 2805.2, "offsetY": 4148.7 },
+    { "map": "2600-NIBLA_Before", "offsetX": 3958.2, "offsetY": 2707.0 }
   ]
 }

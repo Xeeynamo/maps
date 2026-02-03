@@ -1,3 +1,9 @@
+export interface Vector3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
 export interface LodConfig {
   level: number;
   gridSize: number;
@@ -7,9 +13,8 @@ export interface LodConfig {
 
 export interface OverlayConfig {
   map: string;
-  offsetX: number;
-  offsetY: number;
-  scale: number;
+  offsetX?: number;
+  offsetY?: number;
 }
 
 export interface MapConfig {
@@ -23,6 +28,10 @@ export interface MapConfig {
   virtualSize?: number;
   // When true, automatically enables revealAlpha A tiles on load
   revealTransparency?: boolean;
+  // UE4 game metadata: map resolution (pixels per UE4 centimeter)
+  pixelPerCm?: number;
+  // UE4 game metadata: map top-left corner in UE4 world coordinates
+  origin?: Vector3;
 }
 
 export interface Viewport {

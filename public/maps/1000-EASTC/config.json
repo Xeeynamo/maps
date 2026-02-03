@@ -1,6 +1,8 @@
 {
   "name": "1000-EASTC",
   "tileSize": 256,
+  "pixelPerCm": 0.0079956055,
+  "origin": { "x": -262000, "y": -562000, "z": -26200 },
   "lods": [
     {
       "level": 0,
@@ -40,17 +42,7 @@
     }
   ],
   "overlays": [
-    {
-      "map": "1200-GRASA",
-      "offsetX": 4575.9,
-      "offsetY": 4080.9,
-      "scale": 0.4138
-    },
-    {
-      "map": "1300-JUNOA",
-      "offsetX": 3685.3,
-      "offsetY": 5592.3,
-      "scale": 0.326
-    }
+    { "map": "1200-GRASA", "offsetX": 4575.1, "offsetY": 4080.1},
+    { "map": "1300-JUNOA", "offsetX": 3685.3, "offsetY": 5591.8}
   ]
 }

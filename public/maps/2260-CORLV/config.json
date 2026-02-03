@@ -1,6 +1,8 @@
 {
   "name": "2260-CORLV",
   "tileSize": 256,
+  "pixelPerCm": 0.18125916,
+  "origin": { "x": -636693.1113, "y": 438025, "z": 0 },
   "lods": [
     {
       "level": 0,

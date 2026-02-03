@@ -1,6 +1,8 @@
 {
   "name": "1310-JNONV",
   "tileSize": 256,
+  "pixelPerCm": 0.1375885,
+  "origin": { "x": 301280, "y": 274025.49, "z": 0 },
   "lods": [
     {
       "level": 0,

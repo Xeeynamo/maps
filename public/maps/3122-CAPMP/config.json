@@ -1,6 +1,8 @@
 {
   "name": "3122-CAPMP",
   "tileSize": 256,
+  "pixelPerCm": 0.048843384,
+  "origin": { "x": 5336.4424, "y": -247150.62, "z": 0 },
   "lods": [
     {
       "level": 0,

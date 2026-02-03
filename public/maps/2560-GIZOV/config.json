@@ -1,6 +1,8 @@
 {
   "name": "2560-GIZOV",
   "tileSize": 256,
+  "pixelPerCm": 0.066329956,
+  "origin": { "x": -851463, "y": 366628.41, "z": 0 },
   "lods": [
     {
       "level": 0,

@@ -1,6 +1,8 @@
 {
   "name": "2600-NIBLA",
   "tileSize": 256,
+  "pixelPerCm": 0.033935547,
+  "origin": { "x": -800642.62, "y": 151287.38, "z": -80000 },
   "lods": [
     {
       "level": 0,
@@ -40,11 +42,6 @@
     }
   ],
   "overlays": [
-    {
-      "map": "2610-NIBLT_Before",
-      "offsetX": 4495.4,
-      "offsetY": 3678.5,
-      "scale": 0.1303
-    }
+    { "map": "2610-NIBLT_Before", "offsetX": 4495.4, "offsetY": 3678.5 }
   ]
 }

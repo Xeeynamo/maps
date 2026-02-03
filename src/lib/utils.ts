@@ -1,4 +1,4 @@
-import type { Viewport, LodConfig, TileCoord } from './types';
+import type { Viewport, LodConfig, TileCoord, MapConfig, Vector3 } from './types';
 
 export function screenToWorld(
   screenX: number,
@@ -125,4 +125,47 @@ export function getTileUrl(
 
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+export function viewerToUE4(
+  viewerX: number,
+  viewerY: number,
+  pixelPerCm: number,
+  origin: Vector3
+): Vector3 {
+  return {
+    x: origin.x + viewerX / pixelPerCm,
+    y: origin.y + viewerY / pixelPerCm,
+    z: origin.z,
+  };
+}
+
+export function ue4ToViewer(
+  ue4X: number,
+  ue4Y: number,
+  pixelPerCm: number,
+  origin: Vector3
+): { x: number; y: number } {
+  return {
+    x: (ue4X - origin.x) * pixelPerCm,
+    y: (ue4Y - origin.y) * pixelPerCm,
+  };
+}
+
+export function computeOverlayTransform(
+  parentConfig: MapConfig,
+  childConfig: MapConfig
+): { offsetX: number; offsetY: number; scale: number } | null {
+  if (
+    parentConfig.pixelPerCm == null || parentConfig.origin == null ||
+    childConfig.pixelPerCm == null || childConfig.origin == null
+  ) {
+    return null;
+  }
+
+  return {
+    offsetX: (childConfig.origin.x - parentConfig.origin.x) * parentConfig.pixelPerCm,
+    offsetY: (childConfig.origin.y - parentConfig.origin.y) * parentConfig.pixelPerCm,
+    scale: parentConfig.pixelPerCm / childConfig.pixelPerCm,
+  };
 }

@@ -1,6 +1,8 @@
 {
   "name": "2610-NIBLT_Before",
   "tileSize": 256,
+  "pixelPerCm": 0.26057434,
+  "origin": { "x": -667821.543, "y": 259688.36, "z": 0 },
   "lods": [
     {
       "level": 0,

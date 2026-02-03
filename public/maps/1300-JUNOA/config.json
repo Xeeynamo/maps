@@ -1,6 +1,8 @@
 {
   "name": "1300-JUNOA",
   "tileSize": 256,
+  "pixelPerCm": 0.024520874,
+  "origin": { "x": 198699.48, "y": 137159.484, "z": -130000 },
   "lods": [
     {
       "level": 0,
@@ -40,17 +42,7 @@
     }
   ],
   "overlays": [
-    {
-      "map": "1350-JNONT",
-      "offsetX": 373,
-      "offsetY": 1734,
-      "scale": 0.758
-    },
-    {
-      "map": "1320-JUNOS",
-      "offsetX": 6914,
-      "offsetY": 4768,
-      "scale": 0.118
-    }
+    { "map": "1350-JNONT", "offsetX": 374, "offsetY": 1734.8 },
+    { "map": "1320-JUNOS", "offsetX": 6914.3, "offsetY": 4768 }
   ]
 }

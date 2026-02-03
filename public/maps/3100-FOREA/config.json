@@ -1,6 +1,8 @@
 {
   "name": "3100-FOREA",
   "tileSize": 256,
+  "pixelPerCm": 0.011795044,
+  "origin": { "x": -507200, "y": -1297200, "z": -66200 },
   "lods": [
     {
       "level": 0,
@@ -40,11 +42,6 @@
     }
   ],
   "overlays": [
-    {
-      "map": "3122-CAPMP",
-      "offsetX": 3963.3,
-      "offsetY": 3302.5,
-      "scale": 0.2415
-    }
+    { "map": "3122-CAPMP", "offsetX": 3963.5, "offsetY": 3303.0 }
   ]
 }

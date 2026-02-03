@@ -2,6 +2,8 @@
   "name": "0001-WORLD+OpenAll",
   "tileSize": 256,
   "revealTransparency": true,
+  "pixelPerCm": 0.0051879883,
+  "origin": { "x": -961291.6, "y": -731711.6, "z": -117400 },
   "lods": [
     {
       "level": 0,
@@ -41,23 +43,8 @@
     }
   ],
   "overlays": [
-    {
-      "map": "1000-EASTC",
-      "offsetX": 3628.8,
-      "offsetY": 882.8,
-      "scale": 0.649
-    },
-    {
-      "map": "2000-WESTC",
-      "offsetX": -2250.2,
-      "offsetY": 2472.8,
-      "scale": 0.78
-    },
-    {
-      "map": "3000-NORTC",
-      "offsetX": 2562.6,
-      "offsetY": -2729.4,
-      "scale": 0.39
-    }
+    { "map": "1000-EASTC", "offsetX":3629.5, "offsetY": 882.6 },
+    { "map": "2000-WESTC", "offsetX":-2250.1, "offsetY": 2473.3  },
+    { "map": "3000-NORTC", "offsetX": 2565.1, "offsetY": -2724.6 }
   ]
 }

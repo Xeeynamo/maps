@@ -120,29 +120,62 @@
     1. Select base map and sub-map, then click "Load Maps"<br>
     2. <span class="key">Drag</span> to pan the view, <span class="key">Scroll</span> to zoom<br>
     3. Use <strong>Offset X/Y</strong> sliders to roughly position the overlay<br>
-    4. Use <strong>Scale</strong> slider to resize (scales from center, won't shift the image)<br>
-    5. Use <strong>Opacity</strong> to see through the overlay and match features<br>
-    6. Click <strong>Auto Fine-tune</strong> to automatically optimize alignment around current position<br>
-    7. Use <strong>Undo</strong> to revert changes. Copy the config values when aligned.
+    4. Use <strong>Opacity</strong> to see through the overlay and match features<br>
+    5. Click <strong>Auto Fine-tune</strong> to automatically optimize alignment around current position<br>
+    6. Use <strong>Undo</strong> to revert changes. Copy the config values when aligned.
   </div>
 
   <div class="controls">
     <div class="control-group">
       <label>Base Map</label>
       <select id="baseMap">
+        <option value="0001-WORLD+OpenAll">0001-WORLD+OpenAll</option>
         <option value="1000-EASTC">1000-EASTC</option>
+        <option value="1110-KALMT">1110-KALMT</option>
         <option value="1200-GRASA">1200-GRASA</option>
         <option value="1300-JUNOA">1300-JUNOA</option>
+        <option value="1310-JNONV">1310-JNONV</option>
+        <option value="1320-JUNOS">1320-JUNOS</option>
+        <option value="1350-JNONT">1350-JNONT</option>
+        <option value="2000-WESTC">2000-WESTC</option>
+        <option value="2110-COSTT_After">2110-COSTT_After</option>
+        <option value="2200-CORLA+After">2200-CORLA+After</option>
+        <option value="2260-CORLV">2260-CORLV</option>
+        <option value="2400-GONGA">2400-GONGA</option>
+        <option value="2410-GONGV">2410-GONGV</option>
+        <option value="2500-CSMOA">2500-CSMOA</option>
+        <option value="2510-CSMOC">2510-CSMOC</option>
+        <option value="2600-NIBLA_Before">2600-NIBLA_Before</option>
+        <option value="2610-NIBLT_Before">2610-NIBLT_Before</option>
+        <option value="3000-NORTC">3000-NORTC</option>
+        <option value="3100-FOREA">3100-FOREA</option>
+        <option value="3122-CAPMP">3122-CAPMP</option>
       </select>
     </div>
     <div class="control-group">
       <label>Sub Map to Align</label>
       <select id="subMap">
+        <option value="0001-WORLD+OpenAll">0001-WORLD+OpenAll</option>
+        <option value="1000-EASTC">1000-EASTC</option>
         <option value="1110-KALMT">1110-KALMT</option>
         <option value="1200-GRASA">1200-GRASA</option>
         <option value="1300-JUNOA">1300-JUNOA</option>
-        <option value="1320-JUNOS">1350-JNONT</option>
+        <option value="1310-JNONV">1310-JNONV</option>
+        <option value="1320-JUNOS">1320-JUNOS</option>
         <option value="1350-JNONT">1350-JNONT</option>
+        <option value="2000-WESTC">2000-WESTC</option>
+        <option value="2110-COSTT_After">2110-COSTT_After</option>
+        <option value="2200-CORLA+After">2200-CORLA+After</option>
+        <option value="2260-CORLV">2260-CORLV</option>
+        <option value="2400-GONGA">2400-GONGA</option>
+        <option value="2410-GONGV">2410-GONGV</option>
+        <option value="2500-CSMOA">2500-CSMOA</option>
+        <option value="2510-CSMOC">2510-CSMOC</option>
+        <option value="2600-NIBLA_Before">2600-NIBLA_Before</option>
+        <option value="2610-NIBLT_Before">2610-NIBLT_Before</option>
+        <option value="3000-NORTC">3000-NORTC</option>
+        <option value="3100-FOREA">3100-FOREA</option>
+        <option value="3122-CAPMP">3122-CAPMP</option>
       </select>
     </div>
     <div class="control-group">
@@ -175,13 +208,6 @@
       </div>
     </div>
     <div class="control-group">
-      <label>Scale (from center)</label>
-      <div class="slider-row">
-        <input type="range" id="scale" min="0.01" max="2" value="0.5" step="0.001" oninput="updateScaleFromSlider()">
-        <span class="value-display" id="scaleVal">0.500</span>
-      </div>
-    </div>
-    <div class="control-group">
       <label>Opacity</label>
       <div class="slider-row">
         <input type="range" id="opacity" min="0" max="1" value="0.7" step="0.05" oninput="updateOpacityFromSlider()">
@@ -210,15 +236,6 @@
       </div>
     </div>
     <div class="control-group">
-      <label>Fine-tune Scale</label>
-      <div class="slider-row">
-        <button onclick="adjustScale(-0.01)">-0.01</button>
-        <button onclick="adjustScale(-0.001)">-0.001</button>
-        <button onclick="adjustScale(0.001)">+0.001</button>
-        <button onclick="adjustScale(0.01)">+0.01</button>
-      </div>
-    </div>
-    <div class="control-group">
       <label>Auto</label>
       <div class="slider-row">
         <button class="btn-auto" onclick="autoFineTune()">Auto Fine-tune</button>
@@ -226,11 +243,8 @@
       </div>
     </div>
     <div class="control-group">
-      <label>Lock</label>
+      <label>Options</label>
       <div class="slider-row">
-        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
-          <input type="checkbox" id="lockScale"> Scale
-        </label>
         <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
           <input type="checkbox" id="smallRange"> Small range
         </label>
@@ -257,15 +271,6 @@
         <button onclick="adjustOffset('y', 1)">+1</button>
       </div>
     </div>
-    <div class="control-group">
-      <label>Micro Scale</label>
-      <div class="slider-row">
-        <button onclick="adjustScale(-0.001)">-0.001</button>
-        <button onclick="adjustScale(-0.0001)">-0.0001</button>
-        <button onclick="adjustScale(0.0001)">+0.0001</button>
-        <button onclick="adjustScale(0.001)">+0.001</button>
-      </div>
-    </div>
   </div>
 
   <div class="score-display">
@@ -275,7 +280,7 @@
 
   <div class="status" id="status">Select maps and click "Load Maps" to begin.</div>
 
-  <div class="canvas-container" id="canvasContainer" style="width: 100%; height: 800px;">
+  <div class="canvas-container" id="canvasContainer" style="width: 100%; height: 1600px;">
     <canvas id="canvas"></canvas>
   </div>
 
@@ -310,7 +315,7 @@
     const MAX_UNDO = 50;
 
     function saveState() {
-      undoStack.push({ offsetX, offsetY, scale });
+      undoStack.push({ offsetX, offsetY });
       if (undoStack.length > MAX_UNDO) undoStack.shift();
       document.getElementById('undoBtn').disabled = false;
     }
@@ -320,28 +325,10 @@
       const state = undoStack.pop();
       offsetX = state.offsetX;
       offsetY = state.offsetY;
-      scale = state.scale;
       updateSliders();
       render();
       updateScoreAndResult();
       document.getElementById('undoBtn').disabled = undoStack.length === 0;
-    }
-
-    // For center-based scaling
-    function getOverlayCenter() {
-      const worldSize = subTotalSize * scale;
-      return {
-        x: offsetX + worldSize / 2,
-        y: offsetY + worldSize / 2
-      };
-    }
-
-    function setScaleAroundCenter(newScale) {
-      const center = getOverlayCenter();
-      scale = newScale;
-      const newWorldSize = subTotalSize * scale;
-      offsetX = center.x - newWorldSize / 2;
-      offsetY = center.y - newWorldSize / 2;
     }
 
     // Drag state
@@ -373,8 +360,8 @@
       const maxGridSize = config.lods[0]?.gridSize || 1;
       const totalSize = config.tileSize * maxGridSize;
 
-      // Use lowest LOD for faster loading
-      const lod = config.lods[config.lods.length - 1];
+      // Use highest resolution LOD (LOD 0) for accurate alignment
+      const lod = config.lods[0];
 
       const canvas = document.createElement('canvas');
       canvas.width = totalSize;
@@ -383,15 +370,25 @@
 
       const tileWorldSize = totalSize / lod.gridSize;
 
+      const minLayer = config.minLayer ?? 0;
+      const maxLayer = config.maxLayer ?? minLayer;
+
       for (let y = 0; y < lod.gridSize; y++) {
         for (let x = 0; x < lod.gridSize; x++) {
           const index = y * lod.gridSize + x;
-          const filename = lod.pattern.replace('{index}', index);
-          try {
-            const img = await loadImage(`${MAPS_PATH}/${mapName}/${filename}`);
-            ctx.drawImage(img, x * tileWorldSize, y * tileWorldSize, tileWorldSize, tileWorldSize);
-          } catch (e) {
-            console.warn(`Failed to load tile: ${filename}`);
+          // Load all layers and composite them
+          for (let layer = minLayer; layer <= maxLayer; layer++) {
+            let filename = lod.pattern.replace('{index}', index).replace('{layer}', layer);
+            // Append .webp extension if pattern doesn't include one
+            if (!filename.includes('.')) {
+              filename += '.webp';
+            }
+            try {
+              const img = await loadImage(`${MAPS_PATH}/${mapName}/${filename}`);
+              ctx.drawImage(img, x * tileWorldSize, y * tileWorldSize, tileWorldSize, tileWorldSize);
+            } catch (e) {
+              // Layer may not exist, that's OK
+            }
           }
         }
       }
@@ -437,16 +434,22 @@
 
         // Check if base config has overlay settings for the selected submap
         const existingOverlay = baseConfig.overlays?.find(o => o.map === subMapName);
+
+        // Compute internal scale from pixelPerCm values
+        if (baseConfig.pixelPerCm != null && subConfig.pixelPerCm != null) {
+          scale = baseConfig.pixelPerCm / subConfig.pixelPerCm;
+        } else {
+          scale = 0.5;
+        }
+
         if (existingOverlay) {
           offsetX = existingOverlay.offsetX ?? baseTotalSize / 4;
           offsetY = existingOverlay.offsetY ?? baseTotalSize / 4;
-          scale = existingOverlay.scale ?? 0.5;
           setStatus(`Loaded existing overlay settings from ${baseMapName}/config.json`);
         } else {
           // Set initial offset to center of base map
           offsetX = baseTotalSize / 4;
           offsetY = baseTotalSize / 4;
-          scale = 0.5;
         }
 
         // Clear undo stack and reset workers for new image data
@@ -539,7 +542,6 @@
     function updateSliders() {
       document.getElementById('offsetX').value = offsetX;
       document.getElementById('offsetY').value = offsetY;
-      document.getElementById('scale').value = scale;
       document.getElementById('opacity').value = opacity;
       updateSliderDisplays();
     }
@@ -547,7 +549,6 @@
     function updateSliderDisplays() {
       document.getElementById('offsetXVal').textContent = offsetX.toFixed(1);
       document.getElementById('offsetYVal').textContent = offsetY.toFixed(1);
-      document.getElementById('scaleVal').textContent = scale.toFixed(4);
       document.getElementById('opacityVal').textContent = opacity.toFixed(2);
     }
 
@@ -556,15 +557,6 @@
       offsetX = parseFloat(document.getElementById('offsetX').value);
       offsetY = parseFloat(document.getElementById('offsetY').value);
       updateSliderDisplays();
-      render();
-      updateScoreAndResult();
-    }
-
-    function updateScaleFromSlider() {
-      saveState();
-      const newScale = parseFloat(document.getElementById('scale').value);
-      setScaleAroundCenter(newScale);
-      updateSliders();
       render();
       updateScoreAndResult();
     }
@@ -582,15 +574,6 @@
       } else {
         offsetY += delta;
       }
-      updateSliders();
-      render();
-      updateScoreAndResult();
-    }
-
-    function adjustScale(delta) {
-      saveState();
-      const newScale = Math.max(0.01, Math.min(2, scale + delta));
-      setScaleAroundCenter(newScale);
       updateSliders();
       render();
       updateScoreAndResult();
@@ -717,12 +700,19 @@
 
       // Find existing overlay or create new one
       const existingIndex = baseConfig.overlays.findIndex(o => o.map === subMapName);
+      const existingOverlay = existingIndex >= 0 ? baseConfig.overlays[existingIndex] : null;
+
+      // Build overlay data with only offsetX and offsetY (scale is computed from pixelPerCm)
       const overlayData = {
         map: subMapName,
         offsetX: parseFloat(offsetX.toFixed(1)),
-        offsetY: parseFloat(offsetY.toFixed(1)),
-        scale: parseFloat(scale.toFixed(4))
+        offsetY: parseFloat(offsetY.toFixed(1))
       };
+
+      // Preserve origin if it exists (must be left untouched)
+      if (existingOverlay?.origin) {
+        overlayData.origin = existingOverlay.origin;
+      }
 
       if (existingIndex >= 0) {
         baseConfig.overlays[existingIndex] = overlayData;
@@ -859,7 +849,7 @@
       `;
     }
 
-    const NUM_WORKERS = navigator.hardwareConcurrency || 4;
+    const NUM_WORKERS = 24;
     let workers = [];
     let workersInitialized = false;
 
@@ -957,6 +947,7 @@
     }
 
     // Auto fine-tune using exhaustive local search with parallel workers
+    // Note: Scale is fixed (computed from pixelPerCm), only offsets are searched
     async function autoFineTune() {
       if (!baseCanvas || !subCanvas) {
         setStatus('Load maps first!');
@@ -971,28 +962,21 @@
       microBtn.disabled = true;
       setStatus(`Auto fine-tuning - searching with ${NUM_WORKERS} cores...`);
 
-      const lockScale = document.getElementById('lockScale').checked;
       const smallRange = document.getElementById('smallRange').checked;
 
       let bestScore = computeCorrelation(offsetX, offsetY, scale);
       let bestOffsetX = offsetX;
       let bestOffsetY = offsetY;
-      let bestScale = scale;
 
-      // Coarse search
+      // Coarse search (offsets only, scale is fixed from pixelPerCm)
       const offsetRange = smallRange ? 100 : 200;
       const offsetStep = 10;
-      const scaleMin = lockScale ? scale : Math.max(0.05, scale - 0.1);
-      const scaleMax = lockScale ? scale : Math.min(2, scale + 0.1);
-      const scaleStep = 0.01;
 
       // Build task list for coarse search
       let tasks = [];
-      for (let sc = scaleMin; sc <= scaleMax; sc += scaleStep) {
-        for (let dy = -offsetRange; dy <= offsetRange; dy += offsetStep) {
-          for (let dx = -offsetRange; dx <= offsetRange; dx += offsetStep) {
-            tasks.push({ ox: offsetX + dx, oy: offsetY + dy, sc });
-          }
+      for (let dy = -offsetRange; dy <= offsetRange; dy += offsetStep) {
+        for (let dx = -offsetRange; dx <= offsetRange; dx += offsetStep) {
+          tasks.push({ ox: offsetX + dx, oy: offsetY + dy, sc: scale });
         }
       }
 
@@ -1004,24 +988,17 @@
         bestScore = result.bestScore;
         bestOffsetX = result.bestParams.ox;
         bestOffsetY = result.bestParams.oy;
-        bestScale = result.bestParams.sc;
       }
 
       // Medium refinement - step of 1 to catch all pixels including odd
       setStatus('Refining (medium)...');
       const medRange = offsetStep * 2;
-      const medStep = 1;  // Fixed: was 2, now 1 to detect odd pixels
-      const medScaleRange = scaleStep * 2;
-      const medScaleStep = 0.002;
+      const medStep = 1;
 
       tasks = [];
-      for (let sc = bestScale - medScaleRange; sc <= bestScale + medScaleRange; sc += medScaleStep) {
-        if (sc <= 0.01 || sc > 2) continue;
-        if (lockScale && sc !== bestScale) continue;
-        for (let dy = -medRange; dy <= medRange; dy += medStep) {
-          for (let dx = -medRange; dx <= medRange; dx += medStep) {
-            tasks.push({ ox: bestOffsetX + dx, oy: bestOffsetY + dy, sc });
-          }
+      for (let dy = -medRange; dy <= medRange; dy += medStep) {
+        for (let dx = -medRange; dx <= medRange; dx += medStep) {
+          tasks.push({ ox: bestOffsetX + dx, oy: bestOffsetY + dy, sc: scale });
         }
       }
 
@@ -1033,24 +1010,17 @@
         bestScore = result.bestScore;
         bestOffsetX = result.bestParams.ox;
         bestOffsetY = result.bestParams.oy;
-        bestScale = result.bestParams.sc;
       }
 
       // Fine refinement
       setStatus('Refining (fine)...');
       const fineRange = 5;
       const fineStep = 1;
-      const fineScaleRange = medScaleStep * 2;
-      const fineScaleStep = 0.0005;
 
       tasks = [];
-      for (let sc = bestScale - fineScaleRange; sc <= bestScale + fineScaleRange; sc += fineScaleStep) {
-        if (sc <= 0.01 || sc > 2) continue;
-        if (lockScale && Math.abs(sc - bestScale) > 0.0001) continue;
-        for (let dy = -fineRange; dy <= fineRange; dy += fineStep) {
-          for (let dx = -fineRange; dx <= fineRange; dx += fineStep) {
-            tasks.push({ ox: bestOffsetX + dx, oy: bestOffsetY + dy, sc });
-          }
+      for (let dy = -fineRange; dy <= fineRange; dy += fineStep) {
+        for (let dx = -fineRange; dx <= fineRange; dx += fineStep) {
+          tasks.push({ ox: bestOffsetX + dx, oy: bestOffsetY + dy, sc: scale });
         }
       }
 
@@ -1062,12 +1032,10 @@
         bestScore = result.bestScore;
         bestOffsetX = result.bestParams.ox;
         bestOffsetY = result.bestParams.oy;
-        bestScale = result.bestParams.sc;
       }
 
       offsetX = bestOffsetX;
       offsetY = bestOffsetY;
-      scale = bestScale;
 
       updateSliders();
       render();
@@ -1078,6 +1046,7 @@
     }
 
     // Micro fine-tune for decimal precision
+    // Note: Scale is fixed (computed from pixelPerCm), only offsets are searched
     async function microFineTune() {
       if (!baseCanvas || !subCanvas) {
         setStatus('Load maps first!');
@@ -1092,27 +1061,18 @@
       microBtn.disabled = true;
       setStatus('Micro fine-tuning with decimal precision...');
 
-      const lockScale = document.getElementById('lockScale').checked;
-
       let bestScore = computeCorrelation(offsetX, offsetY, scale);
       let bestOffsetX = offsetX;
       let bestOffsetY = offsetY;
-      let bestScale = scale;
 
-      // Micro offset search with 0.1 step
+      // Micro offset search with 0.1 step (scale is fixed from pixelPerCm)
       const microOffsetRange = 2;
       const microOffsetStep = 0.1;
-      const microScaleRange = 0.002;
-      const microScaleStep = 0.0001;
 
       let tasks = [];
-      for (let sc = bestScale - microScaleRange; sc <= bestScale + microScaleRange; sc += microScaleStep) {
-        if (sc <= 0.01 || sc > 2) continue;
-        if (lockScale && Math.abs(sc - scale) > 0.00001) continue;
-        for (let dy = -microOffsetRange; dy <= microOffsetRange; dy += microOffsetStep) {
-          for (let dx = -microOffsetRange; dx <= microOffsetRange; dx += microOffsetStep) {
-            tasks.push({ ox: offsetX + dx, oy: offsetY + dy, sc });
-          }
+      for (let dy = -microOffsetRange; dy <= microOffsetRange; dy += microOffsetStep) {
+        for (let dx = -microOffsetRange; dx <= microOffsetRange; dx += microOffsetStep) {
+          tasks.push({ ox: offsetX + dx, oy: offsetY + dy, sc: scale });
         }
       }
 
@@ -1124,12 +1084,10 @@
         bestScore = result.bestScore;
         bestOffsetX = result.bestParams.ox;
         bestOffsetY = result.bestParams.oy;
-        bestScale = result.bestParams.sc;
       }
 
       offsetX = bestOffsetX;
       offsetY = bestOffsetY;
-      scale = bestScale;
 
       updateSliders();
       render();

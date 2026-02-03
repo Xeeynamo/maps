@@ -1,6 +1,8 @@
 {
   "name": "2610-NIBLT",
   "tileSize": 256,
+  "pixelPerCm": 0.26057434,
+  "origin": { "x": -667821.543, "y": 259688.34, "z": 0 },
   "lods": [
     {
       "level": 0,

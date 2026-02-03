@@ -1,6 +1,8 @@
 {
   "name": "2200-CORLA+After",
   "tileSize": 256,
+  "pixelPerCm": 0.021514893,
+  "origin": { "x": -729960.72, "y": 255549.28, "z": -140000 },
   "lods": [
     {
       "level": 0,
@@ -40,17 +42,7 @@
     }
   ],
   "overlays": [
-    {
-      "map": "2110-COSTT_After",
-      "offsetX": 6083.5,
-      "offsetY": 1737.1,
-      "scale": 0.4365
-    },
-    {
-      "map": "2260-CORLV",
-      "offsetX": 2007.7,
-      "offsetY": 3920.7,
-      "scale": 0.1187
-    }
+    { "map": "2110-COSTT_After", "offsetX": 6083.2, "offsetY": 1736.4 },
+    { "map": "2260-CORLV", "offsetX": 2007.6, "offsetY": 3920.6 }
   ]
 }
